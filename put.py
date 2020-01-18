@@ -1,5 +1,12 @@
 import requests
 import json
+import sys
+
+from ctypes import *
+#flowgen is used to call the go code
+flowgen = cdll.LoadLibrary("./buildflow.so")
+
+lib.Goflowgo()
 
 xmlfile = "flow.xml"
 headers = {'content-type': 'application/xml'}
