@@ -32,7 +32,7 @@ type Node struct  {
 	Node1   string `xml:",chardata"`
 }
 //export Goflowgo
-func Goflowgo() {
+func Goflowgo(src, dst string) {
 	note := &input{
 		Xmlns:   "urn:opendaylight:flow:service",
 		Barrier: "false",
@@ -43,8 +43,8 @@ func Goflowgo() {
 		IdleTO:  "0",
 		InstHW:  "false",
 		EType:   "2048",
-		IPDest:  "10.0.0.2/32",
-		IPSrc:	 "10.0.0.4/32",
+		IPDest:  dst,
+		IPSrc:	 src,
 		Order1:  "0",
 		Order2:  "0",
 		TableID: "0",
