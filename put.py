@@ -3,10 +3,26 @@ import json
 import sys
 
 from ctypes import *
+
+
+class go_string(Structure):
+    _fields_ = [
+        ("p", c_char_p),
+        ("n", c_int)]
+
 #flowgen is used to call the go code
 flowgen = cdll.LoadLibrary("./buildflow.so")
 
-lib.Goflowgo()
+src = str(sys.argv[1])+'/32'
+dst = str(sys.argv[2])+'/32'
+
+Src = src.encode('utf-8')
+Dst = dst.encode('utf-8')
+
+SSr = go_string(c_char_p(Src), len(Src))
+DDs = go_string(c_char_p(Dst), len(Dst))
+
+flowgen.Goflowgo(SSr,DDs)
 
 xmlfile = "flow.xml"
 headers = {'content-type': 'application/xml'}
