@@ -13,7 +13,7 @@ print("GET nodes: " + str(responce2.status_code))
 fuckingjson = responce2.json()
 print(fuckingjson)
 for x in fuckingjson['nodes']['node']:
-    print(x)
+    print(x['id'])
 #    if x['id'] in 'openflow:1':
 #        for y in x['flow-node-inventory:table']:
 #            if y['id'] == 0:
