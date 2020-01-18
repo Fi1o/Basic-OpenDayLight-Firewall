@@ -31,8 +31,8 @@ type Node struct  {
 	Xmlns2  string `xml:"xmlns:inv,attr"`
 	Node1   string `xml:",chardata"`
 }
-
-func main() {
+//export Goflowgo
+func Goflowgo() {
 	note := &input{
 		Xmlns:   "urn:opendaylight:flow:service",
 		Barrier: "false",
@@ -60,3 +60,4 @@ func main() {
 	_ = ioutil.WriteFile(fileName, file, 0644)
  
 }
+func main() {}
