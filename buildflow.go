@@ -60,3 +60,4 @@ func Goflowgo() {
 	_ = ioutil.WriteFile(fileName, file, 0644)
  
 }
+func main() {}
