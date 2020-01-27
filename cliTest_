@@ -1,0 +1,149 @@
+import sys
+from ctypes import *
+import requests
+import json
+
+flowgen = cdll.LoadLibrary("./buildflow.so")
+
+class go_string(Structure):
+    _fields_ = [
+        ("p", c_char_p),
+        ("n", c_int)]
+
+print("Greasy SDN Firewall")
+print("1 - Create Rule\n2 - Display Active Rules\nQ - Quit")
+
+nums = 0
+
+loop=1
+innerLoop=1
+while loop:
+    selec = input(">>> ")
+    print(selec)
+    if selec=='1':
+        while innerLoop: 
+            print("\n~~~ Flow Creation Menu ~~~\n1 - New Flow\n2 - Show Current Flow\n3 - Send Flow")
+            selec2 = input(">>> ")
+            if selec2=='1':
+                print("\nAdd rule based on.... ")
+                inputSrcIP =  input(">>> SRC IP: ")
+                inputDstIP =  input(">>> DST IP: ")
+                srcIP = inputSrcIP + '/32'
+                dstIP = inputDstIP + '/32'
+                portType = input(">>> 'UDP' / 'TCP': ")
+                srcTcp = input(">>> SRC PORT: ")
+                dstTcp = input(">>> DST PORT: ")
+            elif selec2=='2':
+                print("\nThe current flow will deliver the following rules:\n")
+                print("Block Traffic Based on\n IP SRC: " + srcIP)
+                print("IP DST: " + dstIP)
+                print("Type: " + portType)
+                print("Port SRC: " + srcTcp)
+                print("Port DST: " + dstTcp)                            
+            elif selec2=='3':
+                Src = srcIP.encode('utf-8')
+                Dst = dstIP.encode('utf-8')
+                sP = srcTcp.encode('utf-8')
+                dP = dstTcp.encode('utf-8')
+                SSr = go_string(c_char_p(Src), len(Src))
+                DDs = go_string(c_char_p(Dst), len(Dst))
+                SSp  = go_string(c_char_p(sP), len(sP))
+                DDp  = go_string(c_char_p(dP), len(dP))
+                #print the entered values to confirm xml being created with that input
+                print(SSr)
+                print(DDs)
+                print(SSp)
+                print(DDp)
+                flowgen.Goflowgo(SSr,DDs,SSp,DDp)             
+                xmlfile = "flow.xml"
+                print("xml create")
+                headers = {'content-type': 'application/xml'}
+                with open(xmlfile) as xml:
+                    responce2 = requests.post("http://10.43.8.11:8181/restconf/operations/sal-flow:add-flow",data=xml,headers=headers,auth=('admin','admin'))
+                statusCode = str(responce2.status_code)
+                if '20' in statusCode:
+                    print("Success!")
+                    print ('Error Code: ' + statusCode)
+                elif '40' in statusCode:
+                    print ("Somethings Wrongs on this Side!")
+                    print ('Error Code: ' + statusCode)
+                elif '50' in statusCode:
+                    print ("Server Side Error (will be 501 if no openflow nodes are connected to the controller)")
+                    print ('Error Code: ' + statusCode)
+
+
+------------------------- buildflow.go ------------------
+
+package main 
+
+import (
+	"encoding/xml"
+	"io/ioutil"
+	"C"
+)
+
+ 
+
+
+type input struct {
+	Xmlns   string `xml:"xmlns,attr"`
+	Barrier string `xml:"barrier"`
+	Node1   Node   `xml:"node"`
+	Cookie  string `xml:"cookie"`
+	Flags   string `xml:"flags"`
+	HardTO  string `xml:"hard-timeout"`
+	IdleTO  string `xml:"idle-timeout"`
+	InstHW  string `xml:"installHw"`	
+	EType   string `xml:"match>ethernet-match>ethernet-type>type"`
+	IPDest  string `xml:"match>ipv4-destination"`
+	IPSrc   string `xml:"match>ipv4-source"`
+	tcpSrc	string `xml:"match>tcp-source-port"`
+	tcpDst	string `xml:"match>tcp-destination-port"`
+	Order1  string `xml:"instructions>instruction>order"`
+	Order2  string `xml:"instructions>instruction>apply-actions>action>order"`
+	Drop    string `xml:"instructions>instruction>apply-actions>action>drop-action"`
+	Pri     string `xml:"priority"`
+	Strict  string `xml:"strict"`	
+    TableID string `xml:"table_id"`
+}
+ 
+type Node struct  {
+	Xmlns2  string `xml:"xmlns:inv,attr"`
+	Node1   string `xml:",chardata"`
+}
+//export Goflowgo
+func Goflowgo(srcIP, dstIP, srcTcp, dstTcp string) {
+	note := &input{
+		Xmlns:   "urn:opendaylight:flow:service",
+		Barrier: "false",
+		Node1:    Node{"urn:opendaylight:inventory","/inv:nodes/inv:node[inv:id=\"openflow:66160483355520\"]"},
+		Cookie:  "55",
+		Flags:    "SEND_FLOW_REM",
+		HardTO:  "0",
+		IdleTO:  "0",
+		InstHW:  "false",
+		EType:   "2048",
+		IPDest:  dstIP,
+		IPSrc:	 srcIP,
+		tcpSrc:	 srcTcp,
+		tcpDst:	 dstTcp,
+		Order1:  "0",
+		Order2:  "0",
+		TableID: "0",
+		Strict:  "false",
+		Pri:     "11",
+	}
+	
+ 
+	file, _ := xml.MarshalIndent(note, "", " ")
+
+	file =  []byte(xml.Header + string(file))
+    var fileName = "flow.xml"
+	_ = ioutil.WriteFile(fileName, file, 0644)
+ 
+}
+func main() {}
+
+                
+
+
