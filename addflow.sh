@@ -2,5 +2,5 @@
 
 go build buildflow.go
 ./buildflow
-python put.py
+python cliBase.py
 
